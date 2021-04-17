@@ -3,21 +3,30 @@
   <image class="bg-img"></image>
 </view>
 <view class="container" style="padding-top:{{statusBarHeight}}px">
+  <!-- 城市 -->
   <view class="title-bar">
     <text class="title-city" style="line-height: {{navHeight}}px">{{city}}</text>
   </view>
+  <!-- 滚动视图 刷新用 -->
   <scroll-view class="scroll-container" scroll-y="true" refresher-enabled="true" refresher-default-style="white"
     refresher-threshold="40" refresher-triggered="{{refreshTriggered}}" bindrefresherrefresh="refresh">
     <view class="main-container {{navbarItem[0].animation}}" hidden="{{currentPage != 1}}">
       <view class="main-weather">
+        <!-- 一言 -->
+        <view wx:if="{{hitokotoShow == true}}">
+          <text class="hitokoto" bindtap="getHitkoto">{{hitokoto}}</text>
+        </view>
+        <!-- 温度 -->
         <view class="temperture">
           <text>{{temp}}</text>
           <text style="font-size: 80px;position: relative;top: 14px;margin-left: 4px;">°</text>
         </view>
+        <!-- 今日天气 -->
         <text class="weather-text"><text class="weather-icon">{{weather[0].icon}}</text> {{weather[0].text}} • {{air.level}}</text>
       </view>
+      <!-- 三天/七天天气 -->
       <view class="three-day-weather">
-        <view wx:for="{{weather}}" class="single-day-weather">
+        <view wx:for="{{weather}}" class="single-day-weather" wx:key="weather">
           <text class="weather-icon">{{item.icon}}</text>
           <text class="day-weather">{{item.day}} • {{item.text}}</text>
           <text class="day-temp"><text>{{item.max_temp}}</text>° / <text>{{item.min_temp}}</text>°</text>
@@ -26,21 +35,37 @@
       <view class="view-more-btn btn-style" bindtap="showAndHide">
         <text>{{hideAndShow}}七日内天气</text>
       </view>
-      <view wx:for="{{cards}}" class="card btn-style">
+      <!-- 七小时天气 -->
+      <view class="card btn-style" wx:if="{{hoursweatherShow == true}}">
+        <view class="hour-text">小时天气</view>
+        <view class="day-hours-weather">
+          <view wx:for="{{sevenhoursweather}}" class="hours-weather" wx:key="sevenhoursweather">
+            <text class="weather-icon" style="text-align: center; position: relative; left: 20rpx; top: -1rpx">{{item.icon}}</text>
+            <view class="hour-day-temp">{{item.temp}}°</view>
+            <view class="hour-day-weather">{{item.text}}</view>
+            <view class="hour-day-hours">{{item.hours}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 卡片 生活指数 -->
+      <view wx:for="{{cards}}" wx:if="{{item.show == true}}" class="card btn-style" wx:key="cards">
         <text class="card-title">{{item.title}}</text>
         <text>{{item.content}}</text>
         <text style="margin-top: 18px;font-size: 14px">{{item.description}}</text>
       </view>
+      <!-- 页脚 -->
       <view class="footer">
-        <text class="footer-text">数据更新于今天 {{updateTime}}</text>
+        <text class="footer-text">数据更新于{{updateDay}} {{updateTime}}</text>
       </view>
     </view>
     <view class="main-container {{navbarItem[1].animation}}" hidden="{{currentPage != 2}}">
+      <!-- 坐标 -->
       <view class="card btn-style info-card">
         <text class="card-title">坐标</text>
         <text>经度: {{location.latitude}}</text>
         <text>纬度: {{location.longitude}}</text>
       </view>
+      <!-- 地址 -->
       <view class="card btn-style info-card">
         <text class="card-title">地址</text>
         <text>国家: {{location.country}}</text>
@@ -49,10 +74,22 @@
         <text>区/县: {{location.district}}</text>
         <text>详细信息: {{location.details}}</text>
       </view>
+      <!-- 开关 -->
+      <view class="card btn-style info-card">
+        <text class="card-title">开关</text>
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hitokotoChange"/>
+        <text class="switch-text">一言Hitokoto</text>
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hourChange"/>
+        <text class="switch-text">小时预报</text>
+        <view wx:for="{{cards}}" wx:key="cards">
+          <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="switch{{index+1}}Change"/>
+          <text class="switch-text">{{item.title}}</text>
+        </view>
+      </view>
     </view>
   </scroll-view>
   <view class="nav-bar">
-    <view id="nav-{{index}}" bindtap="switchTab" wx:key="index" wx:for="{{navbarItem}}" class="nav-bar-item-container">
+    <view id="nav-{{index}}" bindtap="switchTab" wx:key="navbarItem" wx:for="{{navbarItem}}" class="nav-bar-item-container">
       <view class="nav-bar-item {{item.active}}">
         <text class="material-icons">{{item.icon}}</text>
         <text style="font-size: 12px">{{item.text}}</text>

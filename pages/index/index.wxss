@@ -1,10 +1,3 @@
-/**index.wxss**/
-.userinfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 page{
   height: 100%;
 }
@@ -33,12 +26,23 @@ page{
   width: 100%;
   height: 100%;
   background: url(https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images&method=mobile);
-  filter: blur(12px) brightness(0.6);
+  filter: blur(3px) brightness(0.6);
   transition: 0.5s;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
+.hitokoto{
+  text-align: center;
+  display: block;
+  position: relative;
+  top: 50rpx;
+  color: #dddddd;
+}
+
+#weather-icon{
+  display: block;
+}
 #weather-icon{
   display: block;
 }
@@ -106,6 +110,17 @@ page{
   margin-top: 12rpx;
 }
 
+.day-hours-weather{
+  display: flex;
+  font-size: 36rpx;
+  justify-content: center;
+  margin-top: 12rpx;
+  padding: 8rpx 8rpx;
+}
+.hours-weather{
+  padding-right: 2rpx;
+}
+
 .single-day-weather .weather-icon{
   margin-right: 3px;
   width: 28px;
@@ -113,6 +128,28 @@ page{
 
 .day-weather{
   margin-right: auto;
+}
+
+.hour-text{
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hour-day-weather{
+  color: white;
+  position: relative;
+  text-align: center;
+}
+.hour-day-hours{
+  color: white;
+  position: relative;
+  width: 88rpx; 
+  display: block; 
+  text-align: center;
+}
+.hour-day-temp{
+  text-align: center;
+  position: relative;
+  color:white;
 }
 
 .day-temp text{
@@ -153,6 +190,14 @@ page{
   color: rgba(255, 255, 255, 0.5);
   font-size: smaller;
   margin-bottom: 8rpx;
+}
+.switch-text{
+  height: 10rpx; 
+  display: block; 
+  box-sizing: border-box; 
+  left: 75rpx; 
+  top: -46rpx; 
+  position: relative;
 }
 
 .air-quality text{

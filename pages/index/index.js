@@ -3,18 +3,23 @@ import {
   getIconText
 } from '../../utils/util.js'
 
-Page({
+var pageData = {
   // 页面数据部分
   data: {
     navHeight: 40, // 默认导航栏高度
     // 默认字符串
     city: '加载中...', // 默认标题城市
+    hitokoto: '',//一言
+    hitokotoShow: true,//一言显示
     temp: '5', // 默认温度
     statusBarHeight: 20, // 默认状态栏高度
     icon: "", // 主天气图标
     weather: [], // 主显示天气信息
     sevenDayWeather: [], // 七日天气信息
     threeDayWeather: [], // 三日天气信息
+    hoursweather: [],//小时预报
+    sevenhoursweather: [],//七小时预报、
+    hoursweatherShow: true,//小时预报显隐
     air: { // 空气信息
       aqi: '',
       level: '',
@@ -33,7 +38,15 @@ Page({
       active: '',
       animation: ''
     }],
+
     cards: [], // 天气指数卡片信息
+    //天气指数显示与否
+    switch1Show: true,
+    switch2Show: true,
+    switch3Show: true,
+    switch4Show: true,
+    switch5Show: true,
+    switch6Show: true,
     currentPage: 0, // 目前所在的页面
     location: { // 位置信息
       latitude: '',
@@ -44,6 +57,7 @@ Page({
       district: '',
       details: ''
     },
+    updateDay: '',//天气更新时为昨天还是今天
     updateTime: '', // 天气更新时间
     initTime: 0, // 进入小程序时的时间
     refreshTriggered: false, // 是否正在刷新
@@ -120,15 +134,16 @@ Page({
         var lng = res.longitude
         // 发起网络请求，通过经纬度获取位置信息
         wx.request({
-          url: 'https://api.map.baidu.com/geocoder/v2/',
+          url: 'https://api.map.baidu.com/reverse_geocoding/v3/',
           data: {
-            location: lat + ',' + lng,
+            ak: getApp().tianqiApi.baiduMapApiKey,
             output: 'json',
-            pois: '1',
-            ak: getApp().tianqiApi.baiduMapApiKey
+            coordtype: 'wgs84ll',
+            location: lat + ',' + lng
           },
           success(res) {
             console.log('位置信息:')
+            // console.log(res.data)
             console.log(res.data.result)
             var address = res.data.result.addressComponent
             // 显示位置信息
@@ -145,14 +160,33 @@ Page({
               city: address.city + ' ' + address.district
             })
             // 调用获取天气函数
-            _this.getWeather(address.city, action)
+            _this.getWeather(address.city,lat,lng, action)
+            _this.getHitkoto()
           }
         })
       }
     })
   },
+  //一言
+  getHitkoto: function(){
+    var _this = this
+    wx.request({
+      url: 'https://v1.hitokoto.cn',
+      success(res){
+        console.log('一言API')
+        console.log(res.data)
+        _this.setData({
+          hitokoto: res.data.hitokoto
+        })
+      },
+      fail(res){
+        console.log('一言API调用失败')
+        console.log(res.data)
+      }
+    })
+  },
   // 获取天气函数
-  getWeather: function (city, action) {
+  getWeather: function (city, lat,lng, action) {
     // 因为接口限制，这里要裁切城市名
     city = city.substring(0, city.length - 1)
     var _this = this
@@ -168,9 +202,18 @@ Page({
       success(weather) {
         console.log('天气API-当前天气:')
         console.log(weather.data)
+        //判断更新时间是昨天还是今天
+        var today = weather.data.date
+        var updataday = weather.data.update_time.split(' ')[0]
+        if (today == updataday){
+          updataday = '今天'
+        }else{
+          updataday = '昨天'
+        }
         // 展示当前天气温度和天气更新时间
         _this.setData({
           temp: weather.data.tem,
+          updateDay: updataday,
           updateTime: weather.data.update_time.split(' ')[1]
         })
       },
@@ -216,61 +259,95 @@ Page({
         _this.setData({
           threeDayWeather: threeDayWeather
         })
+
+        //小时预报
+        var hourswea =  res.data.data[0].hours
+        console.log(hourswea)
+        var hoursweathers = []
+        for (let h of hourswea) {
+          hoursweathers.push({
+            icon: getIconText(h.wea_img),
+            text: h.wea,
+            temp: h.tem,
+            hours: h.hours,
+            win: h.win
+          })
+        }
+        console.log(hoursweathers)
+        _this.setData({
+          hoursweather: hoursweathers
+        })
+        var sevenhoursweather = []
+        for (var i = 0; i <= 6; i++) {
+          sevenhoursweather.push(hoursweathers[i])
+        }
+        _this.setData({
+          sevenhoursweather: sevenhoursweather
+        })
+        console.log(sevenhoursweather)
+        
       },
       fail(res) {
         console.log('调用天气接口失败')
         console.log(res.data)
       }
     })
-    // console.log(city)
     // 发起网络请求，获取各种生活指数
     wx.request({
-      url: 'https://free-api.heweather.com/v5/weather',
+      url: 'https://devapi.qweather.com/v7/indices/1d',
       data: {
-        city: city,
+        type : '1,2,3,8,9,10',
+        location : lng + ',' + lat,
         key: getApp().tianqiApi.heweatherApiKey
       },
       success(res) {
-        var weather = res.data.HeWeather5[0]
+        var weather = res.data.daily
         console.log('和风天气API:')
         console.log(weather)
         // 保存空气信息
         var air = {
-          aqi: weather.aqi.city.aqi,
-          level: weather.aqi.city.qlty,
-          desp: weather.suggestion.air.txt
+          aqi: weather[1].category,
+          level: weather[1].level,
+          desp: weather[1].text
         }
         // 显示空气质量信息
         _this.setData({
           air: air
         })
+        _this.data.switch1Show
         // 显示各种生活指数
         var cards = [{
-            title: '空气质量指数',
-            content: air.aqi + ' • ' + air.level,
-            description: air.desp
+            title: '空气质量',
+            show: _this.data.switch1Show,
+            content: weather[1].category,
+            description: weather[1].text
           }, {
             title: '舒适指数',
-            content: weather.suggestion.comf.brf,
-            description: weather.suggestion.comf.txt
+            show: _this.data.switch2Show,
+            content: weather[0].category,
+            description: weather[0].text
           },
           {
             title: '洗车指数',
-            content: weather.suggestion.cw.brf,
-            description: weather.suggestion.cw.txt
+            show: _this.data.switch3Show,
+            content: weather[2].category,
+            description: weather[2].text
           },
           {
             title: '穿衣指数',
-            content: weather.suggestion.drsg.brf,
-            description: weather.suggestion.drsg.txt
+            show: _this.data.switch4Show,
+            content: weather[4].category,
+            description: weather[4].text
           }, {
             title: '流感指数',
-            content: weather.suggestion.flu.brf,
-            description: weather.suggestion.flu.txt
+            show: _this.data.switch5Show,
+            content: weather[5].category,
+            description: weather[5].text
           }, {
             title: '运动指数',
-            content: weather.suggestion.sport.brf,
-            description: weather.suggestion.sport.txt
+            show: _this.data.switch6Show,
+            content: weather[3].category,
+            description: weather[3].text
           }
         ]
         _this.setData({
@@ -368,7 +445,46 @@ Page({
         weather: this.data.threeDayWeather
       })
     }
-  }
-})
+  },
+}
+//生活指数隐藏与显示
+for (let i = 1; i <= 6; i++) {
+  (function (index) {
+    pageData[`switch${index}Change`] = function (e) {
+      var obj = {}
+      obj[`switch${index}Show`] = e.detail.value
+      this.setData(obj)
+      var _this = this
+      _this.setData({
+          switchindexShow: e.detail.value
+      })
+      console.log(_this.data.switch1Show)
+    }  
+  })(i)
+}
+//七小时预报显隐
+pageData[`hourChange`] = function (evl) {
+  var obj = {}
+  obj[`hoursweatherShow`] = evl.detail.value
+  this.setData(obj)
+  var _this = this
+  _this.setData({
+    hoursweatherShow: evl.detail.value
+  })
+  console.log(_this.data.hoursweatherShow)
+}
+//一言显隐
+pageData[`hitokotoChange`] = function (e) {
+  var obj = {}
+  obj[`hitokotoShow`] = e.detail.value
+  this.setData(obj)
+  var _this = this
+  _this.setData({
+    hitokotoShow: e.detail.value
+  })
+  console.log(_this.data.hitokotoShow)
+}
 
+Page(pageData)
 // Code by Revincx
+//Increase by Skyil

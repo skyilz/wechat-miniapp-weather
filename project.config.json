@@ -40,9 +40,9 @@
     "minifyWXSS": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.14.4",
-  "appid": "wx7a54d0c24df9df8e",
-  "projectname": "%E6%B5%8B%E8%AF%95",
+  "libVersion": "2.16.1",
+  "appid": "wx7f3b97a7c1111fe5",
+  "projectname": "天气",
   "debugOptions": {
     "hidedInDevtools": []
   },

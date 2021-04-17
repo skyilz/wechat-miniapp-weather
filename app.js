@@ -1,6 +1,6 @@
 // app.js
 App({
-  // 天气相关接口的API密钥，此处已全部换为xxxxx，如需运行请自行申请密钥
+  // 天气相关接口的API密钥，此处已全部换为 xxxxx，如需运行请自行申请密钥
   tianqiApi: {
     // 百度地图API Key
     baiduMapApiKey: 'xxxxx',
