@@ -9,17 +9,17 @@ var pageData = {
     navHeight: 40, // 默认导航栏高度
     // 默认字符串
     city: '加载中...', // 默认标题城市
-    hitokoto: '',//一言
-    hitokotoShow: true,//一言显示
+    hitokoto: '', //一言
+    hitokotoShow: true, //一言显示
     temp: '5', // 默认温度
     statusBarHeight: 20, // 默认状态栏高度
     icon: "", // 主天气图标
     weather: [], // 主显示天气信息
     sevenDayWeather: [], // 七日天气信息
     threeDayWeather: [], // 三日天气信息
-    hoursweather: [],//小时预报
-    sevenhoursweather: [],//七小时预报、
-    hoursweatherShow: true,//小时预报显隐
+    hoursweather: [], //小时预报
+    sevenhoursweather: [], //七小时预报、
+    hoursweatherShow: true, //小时预报显隐
     air: { // 空气信息
       aqi: '',
       level: '',
@@ -57,7 +57,7 @@ var pageData = {
       district: '',
       details: ''
     },
-    updateDay: '',//天气更新时为昨天还是今天
+    updateDay: '', //天气更新时为昨天还是今天
     updateTime: '', // 天气更新时间
     initTime: 0, // 进入小程序时的时间
     refreshTriggered: false, // 是否正在刷新
@@ -93,6 +93,8 @@ var pageData = {
       }, 15000)
     }
   },
+  //云函数查找是否保存过信息
+
   // 设置导航栏和状态栏高度
   setUpDimens: function () {
     let menuBtn = wx.getMenuButtonBoundingClientRect()
@@ -117,11 +119,47 @@ var pageData = {
     this.setData({
       initTime: Date.now()
     })
+    // 数据库获取
     // 获取并显示天气信息
     // 指定调用的动作为初次加载
     this.getLocation('INIT')
   },
-  // 获取位置信息函数
+
+  baidumap: function (lat, lng, action) {
+    var _this = this
+    wx.request({
+      url: 'https://api.map.baidu.com/reverse_geocoding/v3/',
+      data: {
+        ak: getApp().tianqiApi.baiduMapApiKey,
+        output: 'json',
+        coordtype: 'wgs84ll',
+        location: lat + ',' + lng
+      },
+      success(res) {
+        console.log('位置信息:')
+        // console.log(res.data)
+        console.log(res.data.result)
+        var address = res.data.result.addressComponent
+        // 显示位置信息
+        _this.setData({
+          location: {
+            latitude: lat,
+            longitude: lng,
+            country: address.country,
+            province: address.province,
+            city: address.city,
+            district: address.district,
+            details: res.data.result.formatted_address
+          },
+          city: address.city + ' ' + address.district
+        })
+        // 调用获取天气函数
+        _this.getWeather(address.city, lat, lng, action)
+        _this.getHitkoto()
+      }
+    })
+  },
+  // 微信获取位置信息函数
   getLocation: function (action) {
     var _this = this
     // 调用微信接口获取经纬度
@@ -133,60 +171,47 @@ var pageData = {
         var lat = res.latitude
         var lng = res.longitude
         // 发起网络请求，通过经纬度获取位置信息
-        wx.request({
-          url: 'https://api.map.baidu.com/reverse_geocoding/v3/',
-          data: {
-            ak: getApp().tianqiApi.baiduMapApiKey,
-            output: 'json',
-            coordtype: 'wgs84ll',
-            location: lat + ',' + lng
-          },
-          success(res) {
-            console.log('位置信息:')
-            // console.log(res.data)
-            console.log(res.data.result)
-            var address = res.data.result.addressComponent
-            // 显示位置信息
-            _this.setData({
-              location: {
-                latitude: lat,
-                longitude: lng,
-                country: address.country,
-                province: address.province,
-                city: address.city,
-                district: address.district,
-                details: res.data.result.formatted_address
-              },
-              city: address.city + ' ' + address.district
-            })
-            // 调用获取天气函数
-            _this.getWeather(address.city,lat,lng, action)
-            _this.getHitkoto()
-          }
-        })
+        _this.baidumap(lat, lng, action)
       }
     })
   },
   //一言
-  getHitkoto: function(){
+  getHitkoto: function () {
     var _this = this
     wx.request({
       url: 'https://v1.hitokoto.cn',
-      success(res){
+      success(res) {
         console.log('一言API')
         console.log(res.data)
         _this.setData({
           hitokoto: res.data.hitokoto
         })
       },
-      fail(res){
+      fail(res) {
         console.log('一言API调用失败')
         console.log(res.data)
       }
     })
   },
+  // 地图定位
+  choosemapads: function (action) {
+    wx.chooseLocation({
+      success: (res) => {
+        console.log(res)
+        var _this = this
+        var lat = res.latitude
+        var lng = res.longitude
+        _this.baidumap(lat, lng, action)
+      },
+    })
+  },
+  // 重新定位
+  getlocationagin: function (action) {
+    var _this = this
+    _this.getLocation(action)
+  },
   // 获取天气函数
-  getWeather: function (city, lat,lng, action) {
+  getWeather: function (city, lat, lng, action) {
     // 因为接口限制，这里要裁切城市名
     city = city.substring(0, city.length - 1)
     var _this = this
@@ -205,9 +230,9 @@ var pageData = {
         //判断更新时间是昨天还是今天
         var today = weather.data.date
         var updataday = weather.data.update_time.split(' ')[0]
-        if (today == updataday){
+        if (today == updataday) {
           updataday = '今天'
-        }else{
+        } else {
           updataday = '昨天'
         }
         // 展示当前天气温度和天气更新时间
@@ -261,7 +286,7 @@ var pageData = {
         })
 
         //小时预报
-        var hourswea =  res.data.data[0].hours
+        var hourswea = res.data.data[0].hours
         console.log(hourswea)
         var hoursweathers = []
         for (let h of hourswea) {
@@ -285,7 +310,7 @@ var pageData = {
           sevenhoursweather: sevenhoursweather
         })
         console.log(sevenhoursweather)
-        
+
       },
       fail(res) {
         console.log('调用天气接口失败')
@@ -296,8 +321,8 @@ var pageData = {
     wx.request({
       url: 'https://devapi.qweather.com/v7/indices/1d',
       data: {
-        type : '1,2,3,8,9,10',
-        location : lng + ',' + lat,
+        type: '1,2,3,8,9,10',
+        location: lng + ',' + lat,
         key: getApp().tianqiApi.heweatherApiKey
       },
       success(res) {
@@ -456,10 +481,10 @@ for (let i = 1; i <= 6; i++) {
       this.setData(obj)
       var _this = this
       _this.setData({
-          switchindexShow: e.detail.value
+        switchindexShow: e.detail.value
       })
       console.log(_this.data.switch1Show)
-    }  
+    }
   })(i)
 }
 //七小时预报显隐
@@ -487,4 +512,4 @@ pageData[`hitokotoChange`] = function (e) {
 
 Page(pageData)
 // Code by Revincx
-//Increase by Skyil
+// Increase by Skyil

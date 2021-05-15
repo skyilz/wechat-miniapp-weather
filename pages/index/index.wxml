@@ -64,6 +64,10 @@
         <text class="card-title">坐标</text>
         <text>经度: {{location.latitude}}</text>
         <text>纬度: {{location.longitude}}</text>
+        <view class="button-sp-area">
+          <button type="default" size="mini" bindtap="getLocation" class="mini-btn">重新定位</button>
+          <button type="default" size="mini" bindtap="choosemapads" class="mini-btn">手动定位</button>
+        </view>
       </view>
       <!-- 地址 -->
       <view class="card btn-style info-card">
