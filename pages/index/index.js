@@ -477,12 +477,12 @@ var pageData = {
     if (this.data.hideAndShow == '查看') {
       this.setData({
         hideAndShow: '隐藏',
-        weather: this.data.sevenDayWeather
+        DayWeather: this.data.sevenDayWeather
       })
     } else {
       this.setData({
         hideAndShow: '查看',
-        weather: this.data.threeDayWeather
+        DayWeather: this.data.threeDayWeather
       })
     }
   },
