@@ -18,33 +18,41 @@
         </view>
         <!-- 温度 -->
         <view class="temperture">
-          <text>{{temp}}</text>
+          <text>{{hoursweather[0].temp}}</text>
           <text style="font-size: 80px;position: relative;top: 14px;margin-left: 4px;">°</text>
         </view>
         <!-- 今日天气 -->
-        <text class="weather-text"><text class="weather-icon">{{weather[0].icon}}</text> {{weather[0].text}} • {{air.level}}</text>
+        <text class="weather-text">{{hoursweather[0].text}} • {{hoursweather[0].win}} • 空气质量{{air.level}}</text>
       </view>
       <!-- 三天/七天天气 -->
       <view class="three-day-weather">
-        <view wx:for="{{weather}}" class="single-day-weather" wx:key="weather">
-          <text class="weather-icon">{{item.icon}}</text>
-          <text class="day-weather">{{item.day}} • {{item.text}}</text>
-          <text class="day-temp"><text>{{item.max_temp}}</text>° / <text>{{item.min_temp}}</text>°</text>
+        <view wx:for="{{DayWeather}}" class="single-day-weather" wx:key="weather" >
+          <image class="day-weather-icon" src="../../utils/color/{{item.iconday}}.png"></image>
+          <text class="day-weather" style="">{{item.day}}•{{item.textday}}</text>
+          <view  style="position: inherit"><text class="day-weather">{{item.textnight}}</text></view>
+          <image class="day-weather-icon" src="../../utils/color/{{item.iconnight}}.png" style="position: relative;"></image>
+          <text class="day-temp" style="width:25%"><text>{{item.max_temp}}</text>° / <text>{{item.min_temp}}</text>°</text>
         </view>
       </view>
       <view class="view-more-btn btn-style" bindtap="showAndHide">
         <text>{{hideAndShow}}七日内天气</text>
       </view>
-      <!-- 七小时天气 -->
+      <!-- 小时天气 -->
       <view class="card btn-style" wx:if="{{hoursweatherShow == true}}">
         <view class="hour-text">小时天气</view>
         <view class="day-hours-weather">
-          <view wx:for="{{sevenhoursweather}}" class="hours-weather" wx:key="sevenhoursweather">
-            <text class="weather-icon" style="text-align: center; position: relative; left: 20rpx; top: -1rpx">{{item.icon}}</text>
-            <view class="hour-day-temp">{{item.temp}}°</view>
-            <view class="hour-day-weather">{{item.text}}</view>
-            <view class="hour-day-hours">{{item.hours}}</view>
-          </view>
+          <scroll-view scroll-x="true" style="white-space:nowrap">
+          <block wx:for="{{sevenhoursweather}}" class="hours-weather" wx:key="sevenhoursweather">
+            <view class="hourWeather">
+              <view class="hourWeather-list" style="display: flex;align-items: center;justify-content: center">
+                <text class="hour-day-hours" style="font-size: 16px">{{item.hours}}:00</text>
+                <text class="hour-day-temp">{{item.temp}}°</text>
+                <image class="hour-weather-icon" src="../../utils/color2/{{item.icon}}.png"></image>
+                <text class="hour-day-weather" style="font-size: 16px">{{item.text}}</text>
+              </view>
+            </view>
+          </block>
+          </scroll-view>
         </view>
       </view>
       <!-- 卡片 生活指数 -->
@@ -81,19 +89,21 @@
       <!-- 开关 -->
       <view class="card btn-style info-card">
         <text class="card-title">开关</text>
-        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hitokotoChange"/>
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hitokotoChange" />
         <text class="switch-text">一言Hitokoto</text>
-        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hourChange"/>
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hourChange" />
         <text class="switch-text">小时预报</text>
         <view wx:for="{{cards}}" wx:key="cards">
-          <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="switch{{index+1}}Change"/>
+          <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true"
+            bindchange="switch{{index+1}}Change" />
           <text class="switch-text">{{item.title}}</text>
         </view>
       </view>
     </view>
   </scroll-view>
   <view class="nav-bar">
-    <view id="nav-{{index}}" bindtap="switchTab" wx:key="navbarItem" wx:for="{{navbarItem}}" class="nav-bar-item-container">
+    <view id="nav-{{index}}" bindtap="switchTab" wx:key="navbarItem" wx:for="{{navbarItem}}"
+      class="nav-bar-item-container">
       <view class="nav-bar-item {{item.active}}">
         <text class="material-icons">{{item.icon}}</text>
         <text style="font-size: 12px">{{item.text}}</text>

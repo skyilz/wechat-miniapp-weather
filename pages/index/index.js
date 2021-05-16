@@ -1,6 +1,6 @@
 // index.js
 import {
-  getIconText
+  gettoday
 } from '../../utils/util.js'
 
 var pageData = {
@@ -14,11 +14,11 @@ var pageData = {
     temp: '5', // 默认温度
     statusBarHeight: 20, // 默认状态栏高度
     icon: "", // 主天气图标
-    weather: [], // 主显示天气信息
+    DayWeather: [], // 主显示天气信息
     sevenDayWeather: [], // 七日天气信息
     threeDayWeather: [], // 三日天气信息
     hoursweather: [], //小时预报
-    sevenhoursweather: [], //七小时预报、
+    sevenhoursweather: [], //小时预报、
     hoursweatherShow: true, //小时预报显隐
     air: { // 空气信息
       aqi: '',
@@ -194,21 +194,21 @@ var pageData = {
     })
   },
   // 地图定位
-  choosemapads: function (action) {
+  choosemapads: function () {
     wx.chooseLocation({
       success: (res) => {
         console.log(res)
         var _this = this
         var lat = res.latitude
         var lng = res.longitude
-        _this.baidumap(lat, lng, action)
+        _this.baidumap(lat, lng, 'INIT')
       },
     })
   },
   // 重新定位
-  getlocationagin: function (action) {
+  getlocationagin: function () {
     var _this = this
-    _this.getLocation(action)
+    _this.getLocation('INIT')
   },
   // 获取天气函数
   getWeather: function (city, lat, lng, action) {
@@ -217,19 +217,18 @@ var pageData = {
     var _this = this
     // 发起网络请求，获取当前天气
     wx.request({
-      url: 'https://tianqiapi.com/api',
+      url: 'https://devapi.qweather.com/v7/weather/now',
       data: {
-        version: 'v6',
-        appid: getApp().tianqiApi.appid,
-        appsecret: getApp().tianqiApi.appsecret,
-        city: city
+        location: lng + ',' + lat,
+        key: getApp().tianqiApi.heweatherApiKey
       },
       success(weather) {
-        console.log('天气API-当前天气:')
+        console.log('和风天气API-当前天气:')
         console.log(weather.data)
         //判断更新时间是昨天还是今天
-        var today = weather.data.date
-        var updataday = weather.data.update_time.split(' ')[0]
+        var today = gettoday(new Date())
+        var updataday = weather.data.updateTime.substring(weather.data.updateTime.indexOf('2021-') + 8, weather.data.updateTime.indexOf('2021-') + 10)
+        console.log(weather.data.updateTime.substring(weather.data.updateTime.indexOf('2021-') + 11, weather.data.updateTime.indexOf('2021-') + 16))
         if (today == updataday) {
           updataday = '今天'
         } else {
@@ -237,9 +236,9 @@ var pageData = {
         }
         // 展示当前天气温度和天气更新时间
         _this.setData({
-          temp: weather.data.tem,
+          temp: weather.data.now.temp,
           updateDay: updataday,
-          updateTime: weather.data.update_time.split(' ')[1]
+          updateTime: weather.data.updateTime.substring(weather.data.updateTime.indexOf('2021-') + 11, weather.data.updateTime.indexOf('2021-') + 16)
         })
       },
       fail(res) {
@@ -249,27 +248,28 @@ var pageData = {
     })
     // 发起网络请求，获取七日内天气
     wx.request({
-      url: 'https://tianqiapi.com/api',
+      url: 'https://devapi.qweather.com/v7/weather/7d',
       data: {
-        version: 'v1',
-        appid: getApp().tianqiApi.appid,
-        appsecret: getApp().tianqiApi.appsecret,
+        location: lng + ',' + lat,
+        key: getApp().tianqiApi.heweatherApiKey
       },
       success(res) {
-        var weathers = res.data.data
-        console.log('天气API-七日天气:')
-        console.log(res.data.data)
+        var weathers = res.data.daily
+        console.log('和风天气API-七日天气:')
+        console.log(res.data.daily)
         var localWeathers = []
         // 使用循环将返回的数据进行转换
         for (let w of weathers) {
           localWeathers.push({
             // 获取天气对应图标
-            icon: getIconText(w.wea_img),
+            iconday: w.iconDay,
+            iconnight: w.iconNight,
             // 这一句是获取天气具体对应的哪一天，接口返回的结果太长了，我裁切了一下
-            day: w.day.substring(w.day.indexOf('（') + 1, w.day.indexOf('）')),
-            text: w.wea,
-            max_temp: w.tem1.substring(0, w.tem1.length - 1),
-            min_temp: w.tem2.substring(0, w.tem2.length - 1)
+            day: w.fxDate.substring(w.fxDate.indexOf('2021-') + 5, w.fxDate.index),
+            textday: w.textDay,
+            textnight:w.textNight,
+            max_temp: w.tempMax,
+            min_temp: w.tempMin
           })
         }
         // 保存获取的七日内天气
@@ -284,33 +284,42 @@ var pageData = {
         _this.setData({
           threeDayWeather: threeDayWeather
         })
+        // console.log(threeDayWeather)
+        // console.log(_this.data.weather)
 
         //小时预报
-        var hourswea = res.data.data[0].hours
-        console.log(hourswea)
-        var hoursweathers = []
-        for (let h of hourswea) {
-          hoursweathers.push({
-            icon: getIconText(h.wea_img),
-            text: h.wea,
-            temp: h.tem,
-            hours: h.hours,
-            win: h.win
-          })
-        }
-        console.log(hoursweathers)
-        _this.setData({
-          hoursweather: hoursweathers
+        wx.request({
+          url: 'https://devapi.qweather.com/v7/weather/24h?',
+          data:{
+            location: lng + ',' + lat,
+            key: getApp().tianqiApi.heweatherApiKey
+          },success(res){
+            console.log(res.data.hourly)
+            var hoursweathers = []
+            for (let h of res.data.hourly) {
+              hoursweathers.push({
+                icon: h.icon,
+                text: h.text,
+                temp: h.temp,
+                hours: h.fxTime.substring(h.fxTime.indexOf('2021-') + 11, h.fxTime.indexOf('2021-') + 13),
+                win: h.windDir
+              })
+            }
+            console.log(hoursweathers)
+            _this.setData({
+              hoursweather: hoursweathers
+            })
+            var sevenhoursweather = []
+            for (var i = 0; i <= 23; i++) {
+              sevenhoursweather.push(hoursweathers[i])
+            }
+            _this.setData({
+              sevenhoursweather: sevenhoursweather
+            })
+            // console.log(sevenhoursweather)
+          }
         })
-        var sevenhoursweather = []
-        for (var i = 0; i <= 6; i++) {
-          sevenhoursweather.push(hoursweathers[i])
-        }
-        _this.setData({
-          sevenhoursweather: sevenhoursweather
-        })
-        console.log(sevenhoursweather)
-
+        _this.pushweather(action)
       },
       fail(res) {
         console.log('调用天气接口失败')
@@ -378,52 +387,6 @@ var pageData = {
         _this.setData({
           cards: cards
         })
-        // 至此，所有接口已经调用完成
-        var title = ''
-        // 判断调用的动作是刷新还是初次加载
-        switch (action) {
-          case 'INIT':
-            wx.hideLoading()
-            // 计算加载耗时并显示
-            title = '加载完毕，耗时' + (Date.now() - _this.data.initTime) + '毫秒'
-            var newNavBarItem = _this.data.navbarItem
-            newNavBarItem[0].animation = 'fade-in'
-            _this.setData({
-              weather: _this.data.threeDayWeather,
-              // 加载动画
-              navbarItem: newNavBarItem
-            })
-            // 切换到默认页面
-            setTimeout(function () {
-              _this.setData({
-                currentPage: 1
-              })
-            }, 200)
-            break
-          case 'REFRESH':
-            // 将状态设置为停止刷新
-            _this.setData({
-              refreshTriggered: false
-            })
-            // 判断当前显示的是几日天气
-            if (_this.data.weather.length == 3) {
-              _this.setData({
-                weather: _this.data.threeDayWeather
-              })
-            } else {
-              _this.setData({
-                weather: _this.data.sevenDayWeather
-              })
-            }
-            title = '天气与位置信息已刷新～'
-            break
-        }
-        // 显示加载完毕的提示
-        wx.showToast({
-          title: title,
-          icon: 'none',
-          duration: 2000
-        })
       },
       fail(res) {
         console.log('调用和风天气接口失败')
@@ -431,6 +394,58 @@ var pageData = {
       }
     })
   },
+  pushweather:function(action){
+    var _this = this
+    // 至此，所有接口已经调用完成
+    var title = ''
+    // 判断调用的动作是刷新还是初次加载
+    switch (action) {
+      case 'INIT':
+        wx.hideLoading()
+        // 计算加载耗时并显示
+        title = '加载完毕，耗时' + (Date.now() - _this.data.initTime) + '毫秒'
+        var newNavBarItem = _this.data.navbarItem
+        newNavBarItem[0].animation = 'fade-in'
+        console.log(_this.data.threeDayWeather)
+        _this.setData({
+          DayWeather: _this.data.threeDayWeather,
+          // 加载动画
+          navbarItem: newNavBarItem
+        })
+        console.log(_this.data.DayWeather)
+        // 切换到默认页面
+        setTimeout(function () {
+          _this.setData({
+            currentPage: 1
+          })
+        }, 200)
+        break
+      case 'REFRESH':
+        // 将状态设置为停止刷新
+        _this.setData({
+          refreshTriggered: false
+        })
+        // 判断当前显示的是几日天气
+        if (_this.data.DayWeather.length == 3) {
+          _this.setData({
+            DayWeather: _this.data.threeDayWeather
+          })
+        } else {
+          _this.setData({
+            DayWeather: _this.data.sevenDayWeather
+          })
+        }
+        title = '天气与位置信息已刷新～'
+        break
+    }
+    // 显示加载完毕的提示
+    wx.showToast({
+      title: title,
+      icon: 'none',
+      duration: 2000
+    })
+  },
+  
   // 切换底部tab和页面
   switchTab: function (event) {
     var _this = this
