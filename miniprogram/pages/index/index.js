@@ -62,7 +62,8 @@ var pageData = {
     initTime: 0, // 进入小程序时的时间
     refreshTriggered: false, // 是否正在刷新
     hasRefreshed: false, // 15秒内是否已经刷新过
-    hideAndShow: '查看' // 查看七日天气按钮按钮文字
+    hideAndShow: '查看', // 查看七日天气按钮按钮文字\
+    canIUseGetUserProfile: true
   },
   // 刷新天气函数
   refresh: function () {
@@ -109,6 +110,7 @@ var pageData = {
   },
   // 加载页面
   onLoad() {
+    var _this = this
     this.setUpDimens()
     // 显示加载中弹窗
     wx.showLoading({
@@ -119,12 +121,85 @@ var pageData = {
     this.setData({
       initTime: Date.now()
     })
-    // 数据库获取
-    // 获取并显示天气信息
-    // 指定调用的动作为初次加载
-    this.getLocation('INIT')
+    wx.cloud
+      .callFunction({
+        name: 'getuserinfo_weather',
+        data: {},
+        success: function (res) {
+          if (res.result == 'no'){
+            console.log(res)
+            // 获取并显示天气信息
+            // 指定调用的动作为初次加载
+            _this.getLocation('INIT')
+          }
+          else{
+            var city = res.result[0].city
+            var lat = res.result[0].location.latitude
+            var lng = res.result[0].location.longitude
+            _this.setData({
+              city: city,
+              lat: lat,
+              lng: lng,
+              switch1Show:res.result[0].settings.switch1Show,
+              switch2Show:res.result[0].settings.switch2Show,
+              switch3Show:res.result[0].settings.switch3Show,
+              switch4Show:res.result[0].settings.switch4Show,
+              switch5Show:res.result[0].settings.switch5Show,
+              switch6Show:res.result[0].settings.switch6Show,
+              hoursweatherShow:res.result[0].settings.hoursweatherShow,
+              hitokotoShow:res.result[0].settings.hitokotoShow,
+              location: {
+                latitude: res.result[0].location.latitude,
+                longitude: res.result[0].location.longitude,
+                country: res.result[0].location.country,
+                province: res.result[0].location.province,
+                city: res.result[0].location.city,
+                district: res.result[0].location.district,
+                details: res.result[0].location.details
+              },
+            })   
+            _this.getWeather(city,lat,lng,'INIT')
+            _this.getHitkoto()
+          }
+        }
+      })
+    // // 获取并显示天气信息
+    // // 指定调用的动作为初次加载
+    // this.getLocation('INIT')
   },
-
+  getUserProfile(e) {
+    var _this = this
+    wx.getUserProfile({
+      desc: '用于统计信息', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
+      success: function (res) {
+        console.log(res)
+        wx.cloud
+          .callFunction({
+            name: 'userinfo_weather',
+            data: {
+              userinfo: res.userInfo,
+              switch1Show: _this.data.switch1Show,
+              switch2Show: _this.data.switch2Show,
+              switch3Show: _this.data.switch3Show,
+              switch4Show: _this.data.switch4Show,
+              switch5Show: _this.data.switch5Show,
+              switch6Show: _this.data.switch6Show,
+              hitokotoShow: _this.data.hitokotoShow,
+              hoursweatherShow: _this.data.hoursweatherShow,
+              location: _this.data.location,
+              city: _this.data.city
+            },
+            success: function (res) {
+              // wx.hideLoading()
+              console.log('upload userinfo success')
+              _this.setData({
+                canIUseGetUserProfile: false,
+              })            
+            }
+          })
+      }
+    })
+  },
   baidumap: function (lat, lng, action) {
     var _this = this
     wx.request({
@@ -502,7 +577,7 @@ for (let i = 1; i <= 6; i++) {
     }
   })(i)
 }
-//七小时预报显隐
+//小时预报显隐
 pageData[`hourChange`] = function (evl) {
   var obj = {}
   obj[`hoursweatherShow`] = evl.detail.value

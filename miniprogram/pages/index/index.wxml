@@ -89,21 +89,21 @@
       <!-- 开关 -->
       <view class="card btn-style info-card">
         <text class="card-title">开关</text>
-        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hitokotoChange" />
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="{{hitokotoShow == 'true' ? '' : 'true'}}" bindchange="hitokotoChange" />
         <text class="switch-text">一言Hitokoto</text>
-        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true" bindchange="hourChange" />
+        <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="{{hoursweatherShow == 'true' ?  '':'true' }}" bindchange="hourChange" />
         <text class="switch-text">小时预报</text>
         <view wx:for="{{cards}}" wx:key="cards">
-          <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked="true"
+          <switch style="width: 45rpx; height: 45rpx" type="checkbox" checked=""
             bindchange="switch{{index+1}}Change" />
           <text class="switch-text">{{item.title}}</text>
         </view>
       </view>
+      <button type="default"  hidden="{{!canIUseGetUserProfile}}"  bindtap="getUserProfile"> 点此保存信息 </button>
     </view>
   </scroll-view>
   <view class="nav-bar">
-    <view id="nav-{{index}}" bindtap="switchTab" wx:key="navbarItem" wx:for="{{navbarItem}}"
-      class="nav-bar-item-container">
+    <view id="nav-{{index}}" bindtap="switchTab" wx:key="navbarItem" wx:for="{{navbarItem}}" class="nav-bar-item-container">
       <view class="nav-bar-item {{item.active}}">
         <text class="material-icons">{{item.icon}}</text>
         <text style="font-size: 12px">{{item.text}}</text>

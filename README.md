@@ -1,6 +1,17 @@
 ## 天气小程序源码
 
+来体验呀,小giegie
+
+![二维码](wxacode.jpg)
+
+
 更新日志：
+
+**2021.5.18**
+
+1.将设置、定位等信息上传至云端，使我在打开时无需授予定位权限
+
+2.Bug fixed
 
 **2021.5.16**
 
@@ -16,9 +27,9 @@
 1.增加重新定位及手动选择定位按钮
 
 
-寒假写的一个天气小程序
+Revincx寒假写的一个天气小程序
 
 截图：
 
-![截图](https://cdn.jsdelivr.net/gh/Revincx/wechat-miniappp-weather@main/screenshot.png)
+![截图](screenshot.png)
 

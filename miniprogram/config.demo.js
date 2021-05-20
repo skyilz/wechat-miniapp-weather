@@ -9,6 +9,8 @@ const config = {
   // 和风天气接口的ApiKey
   // https://dev.qweather.com/
   heweatherApiKey: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  // 微信云开发环境id
+  cloudenv: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 }
 
 module.exports = config
